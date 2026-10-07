@@ -9,7 +9,7 @@
 	<!-- Geteilter Speicher mit der Tastatur-Erweiterung (diktierter Text). -->
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.com.inthezone.shout</string>
+		<string>group.de.thull24.shout</string>
 	</array>
 </dict>
 </plist>

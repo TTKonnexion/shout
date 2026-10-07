@@ -238,7 +238,7 @@ targets:
     settings:
       base:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-        PRODUCT_BUNDLE_IDENTIFIER: com.inthezone.shout.ios
+        PRODUCT_BUNDLE_IDENTIFIER: de.thull24.shout.ios
         PRODUCT_NAME: "shout"
         MARKETING_VERSION: "1.1.0"
         CURRENT_PROJECT_VERSION: "4"
@@ -246,7 +246,7 @@ targets:
         # Großes Speicherlimit für die lokalen Modelle (WhisperKit + MLX-LLM).
         CODE_SIGN_ENTITLEMENTS: Release/shout-ios.entitlements
         CODE_SIGN_STYLE: Automatic
-        DEVELOPMENT_TEAM: G5FFT759WM
+        DEVELOPMENT_TEAM: 2YGD9XP29T
         SWIFT_VERSION: "5.10"
     dependencies:
       - package: argmax
@@ -284,7 +284,7 @@ targets:
       - path: Sources/FlowLokal/Localization.swift
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.inthezone.shout.ios.keyboard
+        PRODUCT_BUNDLE_IDENTIFIER: de.thull24.shout.ios.keyboard
         PRODUCT_NAME: ShoutKeyboard
         MARKETING_VERSION: "1.1.0"
         CURRENT_PROJECT_VERSION: "4"
@@ -293,7 +293,7 @@ targets:
         TARGETED_DEVICE_FAMILY: "1,2"
         CODE_SIGN_ENTITLEMENTS: Release/shout-keyboard.entitlements
         CODE_SIGN_STYLE: Automatic
-        DEVELOPMENT_TEAM: G5FFT759WM
+        DEVELOPMENT_TEAM: 2YGD9XP29T
         SWIFT_VERSION: "5.10"
 
   # Reine Logik-Tests: kompiliert NUR die abhängigkeitsfreien Dateien mit, damit

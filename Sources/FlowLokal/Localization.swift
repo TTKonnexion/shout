@@ -25,7 +25,7 @@ final class Loc: ObservableObject {
 
     private init() {
         #if os(iOS)
-        let sharedDefaults = UserDefaults(suiteName: "group.com.inthezone.shout")
+        let sharedDefaults = UserDefaults(suiteName: "group.de.thull24.shout")
         let appValue = UserDefaults.standard.string(forKey: Self.storageKey)
         let shared = sharedDefaults?.string(forKey: Self.storageKey)
         language = Self.resolve(shared ?? appValue)
@@ -41,7 +41,7 @@ final class Loc: ObservableObject {
         #if os(iOS)
         // Haupt-App und Tastatur-Erweiterung besitzen getrennte Standard-Container.
         // Die App Group hält ihre Oberflächensprache dennoch synchron.
-        UserDefaults(suiteName: "group.com.inthezone.shout")?.set(raw, forKey: Self.storageKey)
+        UserDefaults(suiteName: "group.de.thull24.shout")?.set(raw, forKey: Self.storageKey)
         #endif
         language = Self.resolve(raw)
     }

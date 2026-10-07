@@ -6,7 +6,7 @@
 	     diktierten Text, um ihn ins Textfeld einzufügen. -->
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.com.inthezone.shout</string>
+		<string>group.de.thull24.shout</string>
 	</array>
 </dict>
 </plist>

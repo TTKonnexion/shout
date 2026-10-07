@@ -4,7 +4,7 @@ import Foundation
 /// iOS verbietet Tastaturen den Mikrofonzugriff — die App diktiert, legt das
 /// Ergebnis hier ab, und die Tastatur fügt es ins Textfeld ein.
 enum AppGroup {
-    static let id = "group.com.inthezone.shout"
+    static let id = "group.de.thull24.shout"
 
     enum DictationPhase: String {
         case idle
