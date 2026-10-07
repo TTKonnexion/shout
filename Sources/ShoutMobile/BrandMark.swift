@@ -51,19 +51,3 @@ struct BrandTitle: View {
     }
 }
 
-/// Volles Konnexion-Logo als Absender, z. B. am Ende der Einstellungen.
-struct KonnexionFooter: View {
-    var body: some View {
-        VStack(spacing: 6) {
-            Image("KonnexionLogo")
-                .resizable()
-                .scaledToFit()
-                .frame(maxWidth: 200)
-                .accessibilityLabel("Konnexion productmanagement")
-            Text(Loc.t("shout. — angepasst von Konnexion"))
-                .font(.caption2).foregroundStyle(.secondary)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 8)
-    }
-}

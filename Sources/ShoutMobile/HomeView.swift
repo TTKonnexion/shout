@@ -13,6 +13,12 @@ struct HomeView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
+                    Image("KonnexionLogo")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(maxWidth: 200)
+                        .accessibilityLabel("Konnexion productmanagement")
+
                     Spacer(minLength: 8)
 
                     statusHeader
