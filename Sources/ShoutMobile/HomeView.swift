@@ -64,6 +64,9 @@ struct HomeView: View {
             .scrollBounceBehavior(.basedOnSize)
             .navigationTitle("shout.")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) { BrandTitle() }
+            }
         }
     }
 

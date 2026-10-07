@@ -51,6 +51,8 @@ struct MobileSettingsView: View {
                 }
                 statsSection
                 supportSection
+                Section { KonnexionFooter() }
+                    .listRowBackground(Color.clear)
             }
             .navigationTitle(Loc.t("Einstellungen"))
             .onAppear { formattingOn = engine.formattingEnabled }

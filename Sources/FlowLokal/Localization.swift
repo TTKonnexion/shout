@@ -480,6 +480,7 @@ final class Loc: ObservableObject {
         // MARK: - Erststart-Assistent
 
         "Willkommen bei shout.": "Welcome to shout.",
+        "shout. — angepasst von Konnexion": "shout. — customized by Konnexion",
         "Diktieren in jede App — komplett lokal auf deinem Mac. Keine Cloud, keine Konten. In vier kurzen Schritten ist alles startklar.":
             "Dictate into any app — entirely local on your Mac. No cloud, no accounts. Four short steps and you’re ready.",
         "Perfekt — shout. darf dein Mikrofon nutzen.": "Perfect — shout. may use your microphone.",

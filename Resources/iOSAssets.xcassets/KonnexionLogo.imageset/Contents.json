@@ -1,0 +1,9 @@
+{
+  "images" : [
+    { "filename" : "konnexion-logo-hell.svg", "idiom" : "universal" },
+    { "appearances" : [ { "appearance" : "luminosity", "value" : "dark" } ],
+      "filename" : "konnexion-logo-dunkel.svg", "idiom" : "universal" }
+  ],
+  "info" : { "author" : "xcode", "version" : 1 },
+  "properties" : { "preserves-vector-representation" : true }
+}

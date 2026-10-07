@@ -24,10 +24,8 @@ struct MobileOnboardingView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 26) {
-                Image(systemName: "mic.fill")
-                    .font(.system(size: 52))
-                    .foregroundStyle(Color.shoutLive)
-                    .accessibilityHidden(true)
+                KonnexionMark()
+                    .frame(width: 72, height: 72)
 
                 VStack(spacing: 10) {
                     Text(Loc.t("Willkommen bei shout."))

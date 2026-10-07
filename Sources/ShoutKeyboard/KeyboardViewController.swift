@@ -5,7 +5,12 @@ import UIKit
 /// Zwei-Schritt-Weg und hält dessen Zustand zwischen Host-App und shout. sichtbar.
 final class KeyboardViewController: UIInputViewController {
 
-    private let accent = UIColor(red: 1.0, green: 0.29, blue: 0.04, alpha: 1)
+    /// Konnexion-Blau, im Dunkelmodus heller (wie `Color.shoutLive` in der App).
+    private let accent = UIColor { trait in
+        trait.userInterfaceStyle == .dark
+            ? UIColor(red: 0.30, green: 0.58, blue: 0.86, alpha: 1)
+            : UIColor(red: 0.0, green: 0.365, blue: 0.643, alpha: 1)
+    }
 
     private let titleLabel = UILabel()
     private let flowLabel = UILabel()
