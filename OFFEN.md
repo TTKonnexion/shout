@@ -16,6 +16,7 @@ Trial-Code und Stripe-Worker sind entfernt (Git-Historie hat alles).
 - [x] **Am iPhone geprüft (16.10.2026): TT-brAIn kommt an.** Wichtig: **Als Adresse den Tailnet-Rechnernamen ohne Punkte nehmen** (`http://<rechnername>:8765`), nicht die 100.x-IP — an die IP sperrt iOS (ATS) http, die Anfrage verlässt das iPhone gar nicht. `NSAllowsLocalNetworking` gilt nur für Namen ohne Punkte und `.local`. Außerdem: Nach dem Flugmodus meldet iOS „Netz da“, bevor das Tailnet steht — deshalb sendet die App nach Netz-/Dienstfehlern selbst erneut (5 s, verdoppelt bis 60 s).
 - [x] **Ohne Netz am iPhone geprüft (16.10.2026):** Flugmodus und WLAN aus → Diktat wartet, danach geht es von selbst raus. (Erster Versuch zählte nicht: Im Flugmodus blieb das WLAN an.)
 - [x] **„Claude fragen“ am iPhone geprüft (16.10.2026):** Antwort kommt in der App an.
+- [x] **Direkt in die Claude- oder ChatGPT-App (iOS, Auftrag Nr. 2, 16.10.2026)** — zweite Knopfreihe nach der Aufnahme, öffnet `claude.ai/new?q=` bzw. `chatgpt.com/?q=` (Universal Link in die App), Text zusätzlich in der Zwischenablage. Am iPhone geprüft.
 - [ ] **Mac und Windows nachziehen** — der Kern (`DictationTargets.swift`) ist am Mac schon nutzbar, es fehlt die Oberfläche; unter Windows alles.
 - [ ] **Tastatur-Weg**: Aus der shout-Tastatur heraus gibt es bewusst keine Zielwahl (dort will man Text).
 
