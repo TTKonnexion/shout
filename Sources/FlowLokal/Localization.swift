@@ -963,5 +963,7 @@ final class Loc: ObservableObject {
         "Aufnehmen und danach wählen: Text, TT-brAIn, Claude fragen, Claude-App oder ChatGPT-App. Einmal drücken zum Starten, nochmal zum Stoppen. Die Diktiertaste bleibt wie gewohnt.": "Record, then choose: Text, TT-brAIn, Ask Claude, Claude app or ChatGPT app. Press once to start, again to stop. The dictation key stays as usual.",
         "Nur im eigenen Netz (Tailnet). Am besten den Rechnernamen ohne Punkte, z. B. http://rechnername:8765.": "Only within your own network (tailnet). Best use the computer name without dots, e.g. http://computername:8765.",
         "Wird im Schlüsselbund gespeichert und nie angezeigt.": "Stored in the keychain and never shown.",
+        "iMac: Claude": "iMac: Claude",
+        "iMac: ChatGPT": "iMac: ChatGPT",
     ]
 }

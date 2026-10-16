@@ -14,7 +14,7 @@ struct TargetChooser: View {
             Text(Loc.t("Wohin damit?"))
                 .font(.caption).foregroundStyle(.secondary)
             HStack(spacing: 8) {
-                ForEach(DictationTarget.allCases, id: \.self) { ziel in
+                ForEach(DictationTarget.primary, id: \.self) { ziel in
                     choiceButton(ziel)
                 }
             }
@@ -29,6 +29,13 @@ struct TargetChooser: View {
                             .frame(maxWidth: .infinity, minHeight: 44)
                     }
                     .buttonStyle(.bordered)
+                }
+            }
+            // Am iMac öffnen: Der Dienst dort startet Claude bzw. ChatGPT mit
+            // dem Diktat — praktisch, wenn man gleich am Schreibtisch weitermacht.
+            HStack(spacing: 8) {
+                ForEach(DictationTarget.imac, id: \.self) { ziel in
+                    choiceButton(ziel)
                 }
             }
         }

@@ -21,6 +21,14 @@ enum DictationTarget: String, Codable, CaseIterable, Sendable {
     case aktion
     /// Der Dienst soll antworten.
     case frage
+    /// Der Dienst öffnet Claude bzw. ChatGPT am iMac mit dem Diktat.
+    case imacClaude = "imac-claude"
+    case imacChatgpt = "imac-chatgpt"
+
+    /// Erste Reihe nach der Aufnahme.
+    static let primary: [DictationTarget] = [.text, .aktion, .frage]
+    /// Reihe „am iMac öffnen“.
+    static let imac: [DictationTarget] = [.imacClaude, .imacChatgpt]
 }
 
 // MARK: - Einstellungen
@@ -605,6 +613,8 @@ enum TargetText {
         case .text: return Loc.t("Text")
         case .aktion: return "TT-brAIn"
         case .frage: return Loc.t("Claude fragen")
+        case .imacClaude: return Loc.t("iMac: Claude")
+        case .imacChatgpt: return Loc.t("iMac: ChatGPT")
         }
     }
 
@@ -613,6 +623,7 @@ enum TargetText {
         case .text: return "doc.on.clipboard"
         case .aktion: return "checklist"
         case .frage: return "bubble.left.and.text.bubble.right"
+        case .imacClaude, .imacChatgpt: return "desktopcomputer"
         }
     }
 

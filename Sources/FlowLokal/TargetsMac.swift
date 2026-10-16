@@ -129,7 +129,7 @@ private struct MacTargetPanelView: View {
 
             if targets.offeredText != nil {
                 HStack(spacing: 6) {
-                    ForEach(DictationTarget.allCases, id: \.self) { ziel in
+                    ForEach(DictationTarget.primary, id: \.self) { ziel in
                         choice(ziel)
                     }
                 }

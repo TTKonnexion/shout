@@ -90,6 +90,15 @@ final class DictationTargetsTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(anfrage.request.timeoutInterval, 60)
     }
 
+    /// Der Dienst kennt die iMac-Ziele unter genau diesen Namen.
+    func testImacZieleWerdenSoGesendet() async throws {
+        StubURLProtocol.antworten = [angenommen("i1")]
+        _ = try await client().submit(id: "i1", ziel: .imacChatgpt, text: "t", quelle: "q", zeit: Date())
+        XCTAssertEqual(posts().first?["ziel"] as? String, "imac-chatgpt")
+        XCTAssertEqual(DictationTarget.imacClaude.rawValue, "imac-claude")
+        XCTAssertEqual(DictationTarget.primary + DictationTarget.imac, DictationTarget.allCases)
+    }
+
     func test401WirdGeraetewortFalsch() async {
         StubURLProtocol.antworten = [StubURLProtocol.Antwort(status: 401)]
         do {
