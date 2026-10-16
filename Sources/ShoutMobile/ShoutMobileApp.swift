@@ -19,10 +19,11 @@ private struct RootView: View {
     @ObservedObject private var loc = Loc.shared
     @AppStorage("didCompleteOnboardingIOS") private var didOnboard = false
     @State private var selectedTab = 0
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            HomeView(engine: engine)
+            HomeView(engine: engine, targets: engine.targets)
                 .tabItem { Label(Loc.t("Diktieren"), systemImage: "mic.fill") }
                 .tag(0)
             // „Meetings" statt „Dateien": Unter Dateien sucht niemand die
@@ -43,6 +44,10 @@ private struct RootView: View {
         }
         .id(loc.language)
         .tint(Color.shoutLive)
+        // Zurück in der App: Wartende Diktate noch einmal versuchen.
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { engine.targets.retryPending() }
+        }
         .sheet(isPresented: .init(get: { !didOnboard }, set: { didOnboard = !$0 })) {
             MobileOnboardingView(engine: engine) { didOnboard = true }
                 .interactiveDismissDisabled()

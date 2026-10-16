@@ -23,3 +23,5 @@ build-ios/
 
 # Ableton-Analysedateien neben den Klang-Signalen — reine Hilfsdateien
 *.asd
+# Aufträge und Notizen aus Cowork – nicht veröffentlichen (öffentlicher Fork)
+cowork/

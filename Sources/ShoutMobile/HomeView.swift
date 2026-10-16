@@ -4,6 +4,8 @@ import UIKit
 /// Haupt-Screen: großer Aufnahme-Knopf, Live-Pegel, Ergebnis mit Kopieren/Teilen.
 struct HomeView: View {
     @ObservedObject var engine: MobileEngine
+    @ObservedObject var targets: TargetDispatcher
+    @AppStorage(TargetSettings.enabledKey) private var targetsEnabled = false
     @State private var copied = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.openURL) private var openURL
@@ -58,8 +60,20 @@ struct HomeView: View {
                         keyboardReturnHint
                     }
 
+                    if engine.state != .recording {
+                        TargetPendingBanner(targets: engine.targets)
+                    }
+
                     if let result = engine.lastResult, engine.state != .recording {
+                        if targets.offeredText != nil {
+                            TargetChooser(targets: targets)
+                        }
                         resultCard(result)
+                    }
+
+                    if engine.state != .recording, let item = targets.activeItem {
+                        TargetItemCard(targets: targets, item: item)
+                            .padding(.horizontal, 4)
                     }
 
                     Spacer(minLength: 8)
@@ -72,6 +86,14 @@ struct HomeView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) { BrandTitle() }
+                if targetsEnabled {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        NavigationLink { TargetHistoryView(targets: targets) } label: {
+                            Image(systemName: "tray.full")
+                        }
+                        .accessibilityLabel(Loc.t("Verlauf der Ziele"))
+                    }
+                }
             }
         }
     }

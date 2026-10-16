@@ -1,6 +1,7 @@
 import SwiftUI
 import AVFoundation
 import UIKit
+import Network
 
 extension Notification.Name {
     /// Vom App Intent (Action Button / Kurzbefehl) gefeuert: Aufnahme starten.
@@ -65,6 +66,16 @@ final class MobileEngine: ObservableObject {
     let meetingRecorder = MeetingRecorder()
     private let sounds = SoundCues()
 
+    /// Ziele nach der Aufnahme (Text · TT-brAIn · Claude fragen) samt
+    /// Warteschlange und Verlauf. Ohne eingeschalteten Schalter passiert hier nichts.
+    lazy var targets = TargetDispatcher(
+        storeURL: StoreIO.directory().appendingPathComponent("ziele.json"),
+        quelle: "shout-ios",
+        makeClient: { try TargetDispatcher.defaultClient() })
+    /// Meldet, wenn das Netz wieder da ist (Flugmodus aus, Tailnet verbunden) —
+    /// dann geht Wartendes von selbst raus.
+    private let pathMonitor = NWPathMonitor()
+
     // iOS-Default: Formatierung AUS — spart den zweiten Modell-Download und
     // Speicher; wer sie will, schaltet sie in den Einstellungen ein.
     var formattingEnabled: Bool {
@@ -104,6 +115,12 @@ final class MobileEngine: ObservableObject {
         NotificationCenter.default.addObserver(forName: .shoutStartDictation, object: nil, queue: .main) { [weak self] _ in
             Task { @MainActor in self?.requestDictation() }
         }
+        pathMonitor.pathUpdateHandler = { [weak self] path in
+            guard path.status == .satisfied else { return }
+            Task { @MainActor in self?.targets.retryPending() }
+        }
+        pathMonitor.start(queue: DispatchQueue(label: "shout.ziele.netz"))
+        targets.retryPending()
         loadModels()
     }
 
@@ -338,6 +355,8 @@ final class MobileEngine: ObservableObject {
                 UIPasteboard.general.string = final
                 AppGroup.setPendingDictation(final)
                 lastResult = final
+                // Aus der Tastatur heraus will man den Text — dort keine Zielwahl.
+                if cameFromKeyboard { targets.dismissOffer() } else { targets.offer(final) }
                 sounds.play(.done)
                 history.add(final, raw: raw)
                 let words = final.split(whereSeparator: { $0.isWhitespace }).count

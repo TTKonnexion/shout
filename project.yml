@@ -209,6 +209,8 @@ targets:
           - SoundCues.swift
           - Theme.swift
           - Backup.swift
+          # Ziele nach der Aufnahme (Text · Handlung · Frage an den eigenen Dienst).
+          - DictationTargets.swift
     # Explizite Info.plist statt GENERATE_INFOPLIST_FILE — nötig für das
     # URL-Schema „shout://" (CFBundleURLTypes), über das die Tastatur die App öffnet.
     info:
@@ -235,6 +237,11 @@ targets:
         # gesperrt wird oder die App in den Hintergrund geht.
         UIBackgroundModes:
           - audio
+        # Ziele nach der Aufnahme: Der eigene Dienst läuft im Tailnet über
+        # http (IP-Adresse oder kurzer Rechnername). Nur lokale Netze frei,
+        # alles andere bleibt unter App Transport Security.
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
     settings:
       base:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
@@ -373,6 +380,8 @@ targets:
       - path: Sources/FlowLokal/AbbruchFlagge.swift
       # Gedächtnis für fehlgeschlagene Abkürzungen; nur Foundation.
       - path: Sources/FlowLokal/Abkuerzungsgedaechtnis.swift
+      # Ziele nach der Aufnahme; nur Foundation (Keychain über ProviderKeychain).
+      - path: Sources/FlowLokal/DictationTargets.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.inthezone.shout.tests

@@ -44,6 +44,10 @@ struct MobileSettingsView: View {
                         settingsLink(icon: "keyboard", title: Loc.t("shout.-Tastatur"),
                                      detail: Loc.t("Einrichten und Vollzugriff verstehen"))
                     }
+                    NavigationLink { TargetSettingsPage(targets: engine.targets) } label: {
+                        settingsLink(icon: "paperplane", title: Loc.t("Ziele"),
+                                     detail: Loc.t("TT-brAIn und Claude fragen nach der Aufnahme"))
+                    }
                     NavigationLink { dataPage } label: {
                         settingsLink(icon: "externaldrive", title: Loc.t("Backup & Übertragung"),
                                      detail: Loc.t("Daten zwischen Mac und iPhone übertragen"))
