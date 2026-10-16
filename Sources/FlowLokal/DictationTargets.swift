@@ -367,7 +367,14 @@ final class TargetDispatcher: ObservableObject {
     var maxWait: TimeInterval = 15 * 60
     /// Pause zwischen zwei Abfragen, falls der Dienst sofort „laeuft“ meldet.
     var pollPause: UInt64 = 1_000_000_000
+    /// Erste Pause vor einem selbsttätigen neuen Versuch; danach jeweils
+    /// verdoppelt bis `retryMax`. Grund: Nach dem Flugmodus meldet iOS „Netz
+    /// da“, bevor das Tailnet wieder steht — der erste Versuch scheitert dann.
+    var retryBase: TimeInterval = 5
+    var retryMax: TimeInterval = 60
     var defaults: UserDefaults
+    private var retryTask: Task<Void, Never>?
+    private var retryAttempt = 0
 
     init(storeURL: URL?, quelle: String, defaults: UserDefaults = .standard,
          makeClient: @escaping () throws -> TargetClient) {
@@ -491,6 +498,7 @@ final class TargetDispatcher: ObservableObject {
             guard !Task.isCancelled else { return }
             log.update(id) { $0.angenommen = true }
             persist()
+            resetRetry()
 
             let deadline = Date().addingTimeInterval(maxWait)
             while true {
@@ -517,7 +525,33 @@ final class TargetDispatcher: ObservableObject {
             let reason = TargetError.from(error)
             log.update(id) { $0.status = .wartet; $0.letzterFehler = reason }
             persist()
+            scheduleRetry(after: reason)
         }
+    }
+
+    /// Bei Netz- und Dienstproblemen selbst erneut versuchen, mit wachsender
+    /// Pause. Bei falschem oder fehlendem Gerätewort bzw. fehlender Adresse
+    /// nicht — das ändert sich erst, wenn der Nutzer etwas einträgt (dann
+    /// sendet `retryPending` aus den Einstellungen).
+    private func scheduleRetry(after reason: TargetError) {
+        switch reason {
+        case .unreachable, .noResponse, .server: break
+        case .unauthorized, .notConfigured, .missingToken: return
+        }
+        guard retryTask == nil else { return }
+        let delay = min(retryMax, retryBase * pow(2, Double(retryAttempt)))
+        retryAttempt += 1
+        retryTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+            guard let self, !Task.isCancelled else { return }
+            self.retryTask = nil
+            self.retryPending()
+        }
+    }
+
+    /// Erfolg: Die nächste Störung beginnt wieder mit der kurzen Pause.
+    private func resetRetry() {
+        retryAttempt = 0
     }
 
     private func persist() {

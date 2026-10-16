@@ -31,6 +31,8 @@ final class DictationTargetsTests: XCTestCase {
             TargetClient(base: base, token: "test-wort", session: StubURLProtocol.session())
         }
         d.pollPause = 10_000_000
+        d.retryBase = 0.02
+        d.retryMax = 0.05
         return d
     }
 
@@ -161,6 +163,35 @@ final class DictationTargetsTests: XCTestCase {
         await waitUntilIdle(d, id)
         XCTAssertEqual(d.item(id)?.status, .fertig)
         XCTAssertEqual(posts().compactMap { $0["id"] as? String }, [id, id])
+    }
+
+    /// Nach dem Flugmodus steht das Tailnet oft erst Sekunden nach „Netz da“.
+    /// Ohne Zutun muss das Diktat trotzdem rausgehen.
+    func testNachFehlschlagSelbstErneut() async {
+        let d = dispatcher()
+        let id = "auto-1"
+        StubURLProtocol.antworten = [
+            StubURLProtocol.Antwort(error: URLError(.cannotConnectToHost)),
+            StubURLProtocol.Antwort(error: URLError(.cannotConnectToHost)),
+            angenommen(id),
+            json(["id": id, "status": "fertig", "ziel": "aktion", "text": "ok"]),
+        ]
+        d.submit("Termin Test", to: .aktion, id: id)
+        for _ in 0..<200 where d.item(id)?.status != .fertig {
+            try? await Task.sleep(nanoseconds: 10_000_000)
+        }
+        XCTAssertEqual(d.item(id)?.status, .fertig)
+        XCTAssertEqual(posts().count, 3)
+    }
+
+    /// Falsches Gerätewort: kein Dauerfeuer auf den Dienst.
+    func testFalschesGeraetewortKeinSelbstVersuch() async {
+        let d = dispatcher()
+        StubURLProtocol.antworten = [StubURLProtocol.Antwort(status: 401)]
+        let id = d.submit("Notiz", to: .aktion)
+        await waitUntilIdle(d, id)
+        try? await Task.sleep(nanoseconds: 200_000_000)
+        XCTAssertEqual(StubURLProtocol.anfragen.count, 1)
     }
 
     /// Zweimal „Senden“ hintereinander → ein Vorgang.
