@@ -1,59 +1,6 @@
 import SwiftUI
 import UIKit
 
-// MARK: - Texte
-
-/// Anzeigetexte für Ziele, Zustände und Fehler — an einer Stelle, damit die
-/// Startseite, der Verlauf und die Einstellungen dasselbe sagen.
-@MainActor
-enum TargetText {
-    static func label(_ ziel: DictationTarget) -> String {
-        switch ziel {
-        case .text: return Loc.t("Text")
-        case .aktion: return "TT-brAIn"
-        case .frage: return Loc.t("Claude fragen")
-        }
-    }
-
-    static func icon(_ ziel: DictationTarget) -> String {
-        switch ziel {
-        case .text: return "doc.on.clipboard"
-        case .aktion: return "checklist"
-        case .frage: return "bubble.left.and.text.bubble.right"
-        }
-    }
-
-    static func error(_ error: TargetError) -> String {
-        switch error {
-        case .notConfigured: return Loc.t("Keine Adresse eingetragen (Einstellungen → Ziele).")
-        case .missingToken: return Loc.t("Kein Gerätewort eingetragen (Einstellungen → Ziele).")
-        case .unauthorized: return Loc.t("Gerätewort falsch.")
-        case .unreachable: return Loc.t("iMac nicht erreichbar.")
-        case .noResponse: return Loc.t("Dienst antwortet nicht.")
-        case .server(let status): return Loc.f("Dienst meldet Fehler %d.", status)
-        }
-    }
-
-    static func status(_ item: TargetItem) -> String {
-        switch item.status {
-        case .wartet: return Loc.t("wartet")
-        case .laeuft: return Loc.t("wird bearbeitet …")
-        case .fertig: return Loc.t("fertig")
-        case .fehler: return Loc.t("Fehler beim Dienst")
-        case .abgebrochen: return Loc.t("abgebrochen")
-        }
-    }
-
-    /// Was als Ergebnis angezeigt (und kopiert) wird.
-    static func result(_ item: TargetItem) -> String? {
-        if item.ziel == .aktion, let line = TargetSummary.line(for: item.vorschlag) {
-            return Loc.f("%@ – liegt auf TT-brAIn zur Bestätigung", line)
-        }
-        let text = item.ergebnis?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        return text.isEmpty ? nil : text
-    }
-}
-
 // MARK: - Auswahl nach der Aufnahme
 
 /// Drei Knöpfe unter dem frischen Diktat. Das zuletzt gewählte Ziel ist

@@ -1,4 +1,5 @@
 import AppKit
+import Network
 import AVFoundation
 import ApplicationServices
 import Combine
@@ -43,6 +44,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
     private let toast = LearnedToast()
     private let recIndicator = RecordingIndicator()
     private let sounds = SoundCues()
+
+    /// Ziele nach der Aufnahme (TT-brAIn, Claude fragen) samt Warteschlange und
+    /// Verlauf — gleicher Kern wie am iPhone. Ausgelöst über die Zieltaste.
+    private lazy var targets = TargetDispatcher(
+        storeURL: StoreIO.directory().appendingPathComponent("ziele.json"),
+        quelle: "shout-mac",
+        makeClient: { try TargetDispatcher.defaultClient() })
+    private let targetPanel = MacTargetPanel()
+    /// Läuft die Aufnahme über die Zieltaste? Dann wird danach nicht eingefügt,
+    /// sondern das Ziel gewählt.
+    private var recordingForTarget = false
+    /// Netz wieder da → Wartendes senden.
+    private let pathMonitor = NWPathMonitor()
 
     /// Mitschnitt einer Besprechung über das Mikrofon. Gehört dem Delegate und
     /// nicht der Ansicht, damit eine laufende Aufnahme das Schließen des
@@ -207,6 +221,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
         )
 
         setupMeetingDetection()
+
+        pathMonitor.pathUpdateHandler = { [weak self] path in
+            guard path.status == .satisfied else { return }
+            Task { @MainActor in self?.targets.retryPending() }
+        }
+        pathMonitor.start(queue: DispatchQueue(label: "shout.ziele.netz"))
+        targets.retryPending()
 
         // Erststart: Onboarding-Assistent; danach das Hauptfenster.
         if !UserDefaults.standard.bool(forKey: "didCompleteOnboarding") {
@@ -736,7 +757,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
                 meetingRecorder: meetingRecorder,
                 onOpenResult: { [weak self] job in self?.openTranscriptWindow(for: job) },
                 onCloseResult: { [weak self] id in self?.closeTranscriptWindow(id) },
-                updates: updateBridge
+                updates: updateBridge,
+                targets: targets
             )
             let window = NSWindow(contentViewController: NSHostingController(rootView: view))
             window.title = "shout."
@@ -1222,7 +1244,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
             pasteLastDictation()
             return
         }
+        if UserDefaults.standard.bool(forKey: TargetSettings.enabledKey),
+           TargetHotkey.current.matches(keyCode: event.keyCode, modifiers: mods) {
+            handleTargetTrigger()
+            return
+        }
         if settings.matchesKeyDown(event) { handleTrigger(down: true) }
+    }
+
+    /// Zieltaste: einmal starten, nochmal stoppen — unabhängig von der
+    /// Aufnahme-Art der Diktiertaste.
+    private func handleTargetTrigger() {
+        if state == .idle { startRecording(forTarget: true) }
+        else if state == .recording { stopAndProcess() }
     }
 
     /// Kombinationen, die für feste Funktionen bzw. das synthetische Einfügen
@@ -1231,6 +1265,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
         if mods == [.command, .option], keyCode == 8 { return true }    // ⌥⌘C
         if mods == [.command, .control], keyCode == 9 { return true }   // ⌃⌘V
         if mods == [.command], keyCode == 9 { return true }             // ⌘V (synthetisches Paste)
+        if TargetHotkey.current.matches(keyCode: keyCode, modifiers: mods) { return true }  // Zieltaste
         return false
     }
 
@@ -1335,8 +1370,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
 
     // MARK: - Aufnahme-Steuerung
 
-    private func startRecording() {
+    private func startRecording(forTarget: Bool = false) {
         disarmPill()
+        recordingForTarget = forTarget
         // Ziel-App merken, solange sie noch im Vordergrund ist.
         targetBundleID = NSWorkspace.shared.frontmostApplication?.bundleIdentifier
         // Aktuelles Mikrofon aus den Einstellungen (Menü oder Dashboard) übernehmen.
@@ -1344,7 +1380,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
         recorder.preferredDeviceUID = (micUID?.isEmpty == false) ? micUID : nil
         // Auto-Stopp nur sinnvoll, wenn die Taste nicht gehalten wird — im
         // Halten-Modus stoppt ja das Loslassen.
-        recorder.autoStopEnabled = (settings.mode != .hold && settings.autoStop)
+        recorder.autoStopEnabled = ((forTarget || settings.mode != .hold) && settings.autoStop)
         recorder.silenceSeconds = settings.silenceSeconds
         do {
             try recorder.start()
@@ -1375,6 +1411,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
         let bundleID = targetBundleID
         let useFormatting = formattingEnabled
         let useCommands = UserDefaults.standard.bool(forKey: "speechCommandsEnabled")
+        let forTarget = recordingForTarget
+        recordingForTarget = false
 
         Task {
             defer { state = .idle; recIndicator.finish() }
@@ -1395,6 +1433,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
 
                 let final = output.trimmingCharacters(in: .whitespacesAndNewlines)
                 guard !final.isEmpty else { return }
+                // Zieltaste: nicht einfügen, sondern wählen lassen. „Text“ fügt
+                // danach dort ein, wo der Cursor stand (das Fenster nimmt der
+                // App den Fokus nicht weg).
+                if forTarget {
+                    sounds.play(.done)
+                    lastInsertedText = final
+                    history.add(final, raw: raw)
+                    let words = final.split(whereSeparator: { $0 == " " || $0 == "\n" || $0 == "\t" }).count
+                    stats.record(words: words, seconds: Double(samples.count) / 16_000.0)
+                    targetPanel.show(targets: targets, text: final) { [weak self] in
+                        guard let self else { return }
+                        if AXIsProcessTrusted() {
+                            self.injector.paste(final, keepInClipboard: self.keepInClipboard)
+                        } else {
+                            self.injector.copyConcealed(final)
+                            self.warnAboutMissingAccessibility()
+                        }
+                    }
+                    return
+                }
                 // Ohne Bedienungshilfen-Freigabe kommt das synthetische ⌘V
                 // nirgends an — bis hierher war das Diktat danach spurlos weg.
                 // Stattdessen: in die Zwischenablage legen und einmal pro Start

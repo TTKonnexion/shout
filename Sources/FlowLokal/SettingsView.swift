@@ -6,6 +6,7 @@ struct SettingsView: View {
     let onRecordHotkey: () -> Void
     var onPersistentPillChanged: (Bool) -> Void = { _ in }
     var onPillPositionChanged: () -> Void = {}
+    var targets: TargetDispatcher? = nil
 
     @AppStorage("formattingEnabled") private var formattingEnabled = true
     @AppStorage("speechCommandsEnabled") private var speechCommands = false
@@ -131,6 +132,8 @@ struct SettingsView: View {
                         Toggle("", isOn: $keepInClipboard).labelsHidden().toggleStyle(.switch).tint(Color.shoutLive)
                     }
                 }
+
+                if let targets { MacTargetsSettings(targets: targets) }
 
                 ConsolePanel(title: Loc.t("Sprache & Ton")) {
                     FieldRow(title: Loc.t("Diktier-Sprache"),

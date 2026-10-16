@@ -94,6 +94,10 @@ targets:
         SUPublicEDKey: "K4fmCpqGG4t4iy6K9FkJqr0xLJddTyWtUBiKWWoxmMI="
         SUEnableAutomaticChecks: true
         SUScheduledCheckInterval: 86400
+        # Ziele nach der Aufnahme: eigener Dienst über http im Tailnet
+        # (Rechnername ohne Punkte). Nur lokale Netze frei.
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
     settings:
       base:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon

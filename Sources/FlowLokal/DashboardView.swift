@@ -54,6 +54,8 @@ struct DashboardView: View {
     var onOpenResult: (FileTranscriptionJob) -> Void = { _ in }
     var onCloseResult: (UUID) -> Void = { _ in }
     var updates: UpdateBridge = .disabled
+    /// Ziele nach der Aufnahme (Einstellungsbereich „Ziele“).
+    var targets: TargetDispatcher? = nil
 
     /// Sprachwechsel: die Texte stecken in den fertig gebauten Views, daher baut
     /// `.id(loc.language)` den Baum nach dem Umschalten komplett neu auf (wie die
@@ -159,7 +161,8 @@ struct DashboardView: View {
         case .aufnahme:
             SettingsView(settings: settings, onRecordHotkey: onRecordHotkey,
                          onPersistentPillChanged: onPersistentPillChanged,
-                         onPillPositionChanged: onPillPositionChanged)
+                         onPillPositionChanged: onPillPositionChanged,
+                         targets: targets)
         case .meeting:
             MeetingView(queue: files, recorder: meetingRecorder,
                         modelReady: model.transcriberReady,
