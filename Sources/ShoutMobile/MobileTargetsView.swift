@@ -60,6 +60,7 @@ enum TargetText {
 /// hervorgehoben, damit der häufige Fall ein Tipp bleibt.
 struct TargetChooser: View {
     @ObservedObject var targets: TargetDispatcher
+    @Environment(\.openURL) private var openURL
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -70,8 +71,30 @@ struct TargetChooser: View {
                     choiceButton(ziel)
                 }
             }
+            // Direkt in die App des Assistenten — über das dortige Abo,
+            // ohne Dienst auf dem iMac.
+            HStack(spacing: 8) {
+                ForEach(AssistantApp.allCases, id: \.self) { app in
+                    Button { open(app) } label: {
+                        Label(app.title, systemImage: "arrow.up.forward.app")
+                            .font(.footnote.weight(.semibold))
+                            .lineLimit(1).minimumScaleFactor(0.8)
+                            .frame(maxWidth: .infinity, minHeight: 44)
+                    }
+                    .buttonStyle(.bordered)
+                }
+            }
         }
         .padding(.horizontal, 4)
+    }
+
+    /// Text liegt schon in der Zwischenablage; zur Sicherheit noch einmal,
+    /// falls die App die Vorbelegung nicht übernimmt — dann einfach einsetzen.
+    private func open(_ app: AssistantApp) {
+        guard let text = targets.offeredText, let url = app.url(for: text) else { return }
+        UIPasteboard.general.string = text
+        targets.dismissOffer()
+        openURL(url)
     }
 
     @ViewBuilder

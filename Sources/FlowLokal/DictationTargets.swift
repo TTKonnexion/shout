@@ -558,3 +558,38 @@ final class TargetDispatcher: ObservableObject {
         if let storeURL { log.save(to: storeURL) }
     }
 }
+
+// MARK: - Direkt in die Claude- oder ChatGPT-App
+
+/// Übergibt ein Diktat an die App eines Assistenten — ohne Schlüssel und ohne
+/// eigenen Dienst, über das Abo in dieser App. Die Adressen sind die offenen
+/// Web-Links mit vorbelegter Frage (`?q=`); ist die App installiert, öffnet
+/// iOS sie über den Universal Link. Ob die App die Vorbelegung übernimmt,
+/// liegt bei ihr — deshalb liegt der Text zusätzlich in der Zwischenablage.
+enum AssistantApp: String, CaseIterable, Sendable {
+    case claude
+    case chatgpt
+
+    /// Lange Diktate sprengen sonst die Adresse; der volle Text steht in der
+    /// Zwischenablage.
+    static let maxQueryLength = 4000
+
+    var title: String {
+        switch self {
+        case .claude: return "Claude-App"
+        case .chatgpt: return "ChatGPT-App"
+        }
+    }
+
+    func url(for text: String) -> URL? {
+        var components: URLComponents
+        switch self {
+        case .claude: components = URLComponents(string: "https://claude.ai/new")!
+        case .chatgpt: components = URLComponents(string: "https://chatgpt.com/")!
+        }
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return components.url }
+        components.queryItems = [URLQueryItem(name: "q", value: String(trimmed.prefix(Self.maxQueryLength)))]
+        return components.url
+    }
+}

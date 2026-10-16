@@ -245,6 +245,9 @@ final class DictationTargetsTests: XCTestCase {
         XCTAssertFalse(d.isRunning("abbr"))
         XCTAssertEqual(d.item("abbr")?.status, .abgebrochen)
         XCTAssertTrue(d.log.pending.isEmpty)
+        // Eine Anfrage, die beim Abbrechen schon unterwegs war, ausklingen
+        // lassen — sonst landet sie im Mitschnitt des nächsten Tests.
+        try? await Task.sleep(nanoseconds: 200_000_000)
     }
 
     // MARK: - Ablage
@@ -294,5 +297,21 @@ final class DictationTargetsTests: XCTestCase {
                        "https://dienst.test")
         XCTAssertNil(TargetSettings.normalizedBase(""))
         XCTAssertNil(TargetSettings.normalizedBase("ftp://dienst.test"))
+    }
+
+    // MARK: - Assistenten-Apps
+
+    func testAssistentenAdressenMitVorbelegterFrage() {
+        XCTAssertEqual(AssistantApp.claude.url(for: " Was kostet das? ")?.absoluteString,
+                       "https://claude.ai/new?q=Was%20kostet%20das?")
+        XCTAssertEqual(AssistantApp.chatgpt.url(for: "Preis & Lieferung")?.absoluteString,
+                       "https://chatgpt.com/?q=Preis%20%26%20Lieferung")
+        XCTAssertEqual(AssistantApp.chatgpt.url(for: "  ")?.absoluteString, "https://chatgpt.com/")
+    }
+
+    func testLangesDiktatWirdFuerDieAdresseGekuerzt() {
+        let url = AssistantApp.claude.url(for: String(repeating: "a", count: 10_000))
+        let q = URLComponents(url: url!, resolvingAgainstBaseURL: false)?.queryItems?.first?.value
+        XCTAssertEqual(q?.count, AssistantApp.maxQueryLength)
     }
 }
