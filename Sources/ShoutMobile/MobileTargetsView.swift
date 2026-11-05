@@ -25,6 +25,12 @@ struct TargetChooser: View {
                     choiceButton(ziel)
                 }
             }
+            // Einfall von unterwegs: wird als Auftrag festgehalten, nichts weiter.
+            targetLayout {
+                ForEach(DictationTarget.auftragReihe, id: \.self) { ziel in
+                    choiceButton(ziel)
+                }
+            }
             // Direkt in die App des Assistenten — über das dortige Abo,
             // ohne Dienst auf dem iMac.
             targetLayout {

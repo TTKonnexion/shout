@@ -96,7 +96,17 @@ final class DictationTargetsTests: XCTestCase {
         _ = try await client().submit(id: "i1", ziel: .imacChatgpt, text: "t", quelle: "q", zeit: Date())
         XCTAssertEqual(posts().first?["ziel"] as? String, "imac-chatgpt")
         XCTAssertEqual(DictationTarget.imacClaude.rawValue, "imac-claude")
-        XCTAssertEqual(DictationTarget.primary + DictationTarget.imac, DictationTarget.allCases)
+        XCTAssertEqual(DictationTarget.auftrag.rawValue, "auftrag")
+        XCTAssertEqual(Set(DictationTarget.primary + DictationTarget.auftragReihe + DictationTarget.imac), Set(DictationTarget.allCases))
+    }
+
+    /// Nr. 250: „Als Auftrag senden“ geht wie die anderen Ziele an /sprache; der Dienst gibt es an den Eingang weiter.
+    func testAuftragZielWirdSoGesendet() async throws {
+        StubURLProtocol.antworten = [angenommen("a1")]
+        _ = try await client().submit(id: "a1", ziel: .auftrag, text: "Beispiel-Einfall", quelle: "shout-ios", zeit: Date())
+        XCTAssertEqual(posts().first?["ziel"] as? String, "auftrag")
+        XCTAssertEqual(posts().first?["text"] as? String, "Beispiel-Einfall")
+        XCTAssertEqual(TargetText.label(.auftrag), "Als Auftrag senden")
     }
 
     func test401WirdGeraetewortFalsch() async {

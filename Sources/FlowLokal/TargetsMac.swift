@@ -134,6 +134,11 @@ private struct MacTargetPanelView: View {
                     }
                 }
                 HStack(spacing: 6) {
+                    ForEach(DictationTarget.auftragReihe, id: \.self) { ziel in
+                        choice(ziel)
+                    }
+                }
+                HStack(spacing: 6) {
                     ForEach(AssistantApp.allCases, id: \.self) { app in
                         Button {
                             guard let url = app.url(for: text) else { return }

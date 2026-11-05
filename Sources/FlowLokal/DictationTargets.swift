@@ -21,6 +21,8 @@ enum DictationTarget: String, Codable, CaseIterable, Sendable {
     case aktion
     /// Der Dienst soll antworten.
     case frage
+    /// Der Dienst legt daraus einen Auftrag an (Eingang-Dienst im eigenen Netz).
+    case auftrag
     /// Der Dienst öffnet Claude bzw. ChatGPT am iMac mit dem Diktat.
     case imacClaude = "imac-claude"
     case imacChatgpt = "imac-chatgpt"
@@ -29,6 +31,8 @@ enum DictationTarget: String, Codable, CaseIterable, Sendable {
     static let primary: [DictationTarget] = [.text, .aktion, .frage]
     /// Reihe „am iMac öffnen“.
     static let imac: [DictationTarget] = [.imacClaude, .imacChatgpt]
+    /// Eigene Reihe: Einfall als Auftrag festhalten (Erfassen, nicht Ausführen).
+    static let auftragReihe: [DictationTarget] = [.auftrag]
 }
 
 // MARK: - Einstellungen
@@ -613,6 +617,7 @@ enum TargetText {
         case .text: return Loc.t("Text")
         case .aktion: return "TT-brAIn"
         case .frage: return Loc.t("Claude fragen")
+        case .auftrag: return Loc.t("Als Auftrag senden")
         case .imacClaude: return Loc.t("iMac: Claude")
         case .imacChatgpt: return Loc.t("iMac: ChatGPT")
         }
@@ -623,6 +628,7 @@ enum TargetText {
         case .text: return "doc.on.clipboard"
         case .aktion: return "checklist"
         case .frage: return "bubble.left.and.text.bubble.right"
+        case .auftrag: return "tray.and.arrow.down"
         case .imacClaude, .imacChatgpt: return "desktopcomputer"
         }
     }
