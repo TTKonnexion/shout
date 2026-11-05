@@ -7,84 +7,53 @@ struct HomeView: View {
     @ObservedObject var targets: TargetDispatcher
     @AppStorage(TargetSettings.enabledKey) private var targetsEnabled = false
     @State private var copied = false
+    @State private var showMusic = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.openURL) private var openURL
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @ScaledMetric(relativeTo: .largeTitle) private var recordButtonSize: CGFloat = 128
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 24) {
-                    Image("KonnexionLogo")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(maxWidth: 200)
-                        .accessibilityLabel("Konnexion productmanagement")
-
-                    Spacer(minLength: 8)
-
-                    statusHeader
-
-                    recordButton
-                        .padding(.vertical, 8)
-
-                    if case .recording = engine.state {
-                        Button(role: .destructive) { engine.cancelRecording() } label: {
-                            Label(Loc.t("Verwerfen"), systemImage: "xmark")
+            GeometryReader { geometry in
+                // Fensterbreite statt Geräteausrichtung: auch schmale iPad-Fenster
+                // und große Bedienungsschrift brauchen die einspaltige Fassung.
+                let wide = UIDevice.current.userInterfaceIdiom == .pad
+                    && geometry.size.width >= 820 && !dynamicTypeSize.isAccessibilitySize
+                let resultHeight = wide ? max(240, min(640, geometry.size.height - 320)) : 180
+                ScrollView {
+                    if wide {
+                        HStack(alignment: .top, spacing: 32) {
+                            recordingPanel
+                                .frame(width: 300)
+                            resultsPanel(maxHeight: resultHeight)
+                                .frame(maxWidth: .infinity)
                         }
-                        .buttonStyle(.bordered)
-                    }
-
-                    if case .failed(let message) = engine.state {
-                        VStack(spacing: 10) {
-                            Text(message)
-                                .font(.footnote).foregroundStyle(.secondary)
-                                .multilineTextAlignment(.center)
-                            if engine.failureNeedsSettings {
-                                Button(Loc.t("Einstellungen öffnen")) {
-                                    if let url = URL(string: UIApplication.openSettingsURLString) {
-                                        openURL(url)
-                                    }
-                                }
-                                .buttonStyle(.borderedProminent)
-                            } else {
-                                Button(Loc.t("Erneut versuchen")) { engine.recover() }
-                                    .buttonStyle(.borderedProminent)
-                            }
+                        .frame(maxWidth: 1180, alignment: .top)
+                        .padding(24)
+                        .frame(maxWidth: .infinity)
+                    } else {
+                        VStack(spacing: 24) {
+                            recordingPanel
+                            resultsPanel(maxHeight: resultHeight)
                         }
-                        .padding(.horizontal, 24)
+                        .frame(maxWidth: 620, minHeight: 520)
+                        .padding()
+                        .frame(maxWidth: .infinity)
                     }
-
-                    if engine.cameFromKeyboard, engine.lastResult != nil,
-                       engine.state == .idle {
-                        keyboardReturnHint
-                    }
-
-                    if engine.state != .recording {
-                        TargetPendingBanner(targets: engine.targets)
-                    }
-
-                    if let result = engine.lastResult, engine.state != .recording {
-                        if targets.offeredText != nil {
-                            TargetChooser(targets: targets)
-                        }
-                        resultCard(result)
-                    }
-
-                    if engine.state != .recording, let item = targets.activeItem {
-                        TargetItemCard(targets: targets, item: item)
-                            .padding(.horizontal, 4)
-                    }
-
-                    Spacer(minLength: 8)
                 }
-                .frame(maxWidth: 620, minHeight: 520)
-                .padding()
+                .scrollBounceBehavior(.basedOnSize)
             }
-            .scrollBounceBehavior(.basedOnSize)
             .navigationTitle("shout.")
             .navigationBarTitleDisplayMode(.inline)
+            .sheet(isPresented: $showMusic) { MusicDiscoveryView(engine: engine) }
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button { showMusic = true } label: {
+                        Label("Musik erkennen", systemImage: "music.note")
+                    }
+                    .accessibilityLabel("Musik erkennen und Listen öffnen")
+                }
                 ToolbarItem(placement: .principal) { BrandTitle() }
                 if targetsEnabled {
                     ToolbarItem(placement: .topBarTrailing) {
@@ -95,6 +64,70 @@ struct HomeView: View {
                     }
                 }
             }
+        }
+    }
+
+    private var recordingPanel: some View {
+        VStack(spacing: 24) {
+            Image("KonnexionLogo")
+                .resizable()
+                .scaledToFit()
+                .frame(maxWidth: 200)
+                .accessibilityLabel("Konnexion productmanagement")
+
+            Spacer(minLength: 8)
+            statusHeader
+            recordButton.padding(.vertical, 8)
+
+            if case .recording = engine.state {
+                Button(role: .destructive) { engine.cancelRecording() } label: {
+                    Label(Loc.t("Verwerfen"), systemImage: "xmark")
+                }
+                .buttonStyle(.bordered)
+            }
+
+            if case .failed(let message) = engine.state {
+                VStack(spacing: 10) {
+                    Text(message)
+                        .font(.footnote).foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                    if engine.failureNeedsSettings {
+                        Button(Loc.t("Einstellungen öffnen")) {
+                            if let url = URL(string: UIApplication.openSettingsURLString) {
+                                openURL(url)
+                            }
+                        }
+                        .buttonStyle(.borderedProminent)
+                    } else {
+                        Button(Loc.t("Erneut versuchen")) { engine.recover() }
+                            .buttonStyle(.borderedProminent)
+                    }
+                }
+                .padding(.horizontal, 24)
+            }
+
+            if engine.cameFromKeyboard, engine.lastResult != nil, engine.state == .idle {
+                keyboardReturnHint
+            }
+        }
+    }
+
+    private func resultsPanel(maxHeight: CGFloat) -> some View {
+        VStack(spacing: 24) {
+            if engine.state != .recording {
+                TargetPendingBanner(targets: targets)
+            }
+            if let result = engine.lastResult, engine.state != .recording {
+                if targets.offeredText != nil {
+                    TargetChooser(targets: targets)
+                }
+                resultCard(result, maxHeight: maxHeight)
+            }
+            if engine.state != .recording, let item = targets.activeItem {
+                TargetItemCard(targets: targets, item: item)
+                    .padding(.horizontal, 4)
+            }
+            Spacer(minLength: 8)
         }
     }
 
@@ -201,7 +234,7 @@ struct HomeView: View {
 
     // MARK: - Ergebnis
 
-    private func resultCard(_ text: String) -> some View {
+    private func resultCard(_ text: String, maxHeight: CGFloat) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Label(Loc.t("In Zwischenablage kopiert"), systemImage: "doc.on.clipboard")
@@ -214,7 +247,7 @@ struct HomeView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .textSelection(.enabled)
             }
-            .frame(maxHeight: 180)
+            .frame(maxHeight: maxHeight)
 
             HStack(spacing: 12) {
                 Button {

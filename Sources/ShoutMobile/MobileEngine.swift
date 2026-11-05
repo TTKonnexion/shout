@@ -51,6 +51,13 @@ final class MobileEngine: ObservableObject {
     let history = DictationHistory()
     let stats = StatsStore()
 
+    lazy var musicLibrary = DiscoveryStore()
+    lazy var musicServices = DiscoveryServices()
+    let musicRecognition = SongRecognitionService()
+    var canRecognizeMusic: Bool {
+        state != .recording && state != .working && !meetingRecorder.isRecording && !fileQueue.isRunning
+    }
+
     private let recorder = AudioRecorder()
     private let transcriber = Transcriber(makeEngine: EngineFactory.speech,
                                               makeFallback: EngineFactory.speechFallback)
@@ -271,6 +278,7 @@ final class MobileEngine: ObservableObject {
 
     func startRecording() {
         guard state == .idle else { return }
+        musicRecognition.cancel()
         AVAudioApplication.requestRecordPermission { [weak self] granted in
             Task { @MainActor in
                 guard let self else { return }
@@ -286,6 +294,7 @@ final class MobileEngine: ObservableObject {
     }
 
     private func beginRecording() {
+        musicRecognition.cancel()
         failureNeedsSettings = false
         // Ein neuer Versuch darf niemals ein Ergebnis aus einer früheren Sitzung
         // als vermeintlich frisches Keyboard-Diktat stehen lassen.

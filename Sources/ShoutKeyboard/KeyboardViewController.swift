@@ -67,7 +67,7 @@ final class KeyboardViewController: UIInputViewController {
         flowLabel.font = .preferredFont(forTextStyle: .caption1)
         flowLabel.adjustsFontForContentSizeCategory = true
         flowLabel.textAlignment = .right
-        flowLabel.numberOfLines = 1
+        flowLabel.numberOfLines = 0
 
         let header = UIStackView(arrangedSubviews: [titleLabel, UIView(), flowLabel])
         header.axis = .horizontal

@@ -24,83 +24,112 @@ struct MobileFilesView: View {
     @State private var newName = ""
     @State private var pendingRemoval: FileTranscriptionJob?
 
+    private var usesSplitNavigation: Bool { UIDevice.current.userInterfaceIdiom == .pad }
+
     var body: some View {
-        NavigationStack {
-            List {
-                if engine.transcriberReady {
-                    recordSection
-                    if !queue.jobs.isEmpty { jobsSection }
-                    filesSection
-                } else {
-                    Section {
-                        Text(Loc.t("Zum Transkribieren wird das Sprachmodell gebraucht. Lade es in den Einstellungen — danach geht es hier weiter."))
-                            .font(.footnote).foregroundStyle(.secondary)
+        Group {
+            if usesSplitNavigation {
+                NavigationSplitView {
+                    meetingList
+                        .navigationSplitViewColumnWidth(min: 280, ideal: 340, max: 400)
+                } detail: {
+                    NavigationStack {
+                        if let job = queue.jobs.first(where: { $0.id == queue.selectedJobID }) {
+                            MobileMeetingDetail(job: job, queue: queue,
+                                                formatterReady: engine.formatterReady,
+                                                onChoose: { choosing = job })
+                                .id(job.id)
+                        } else {
+                            ContentUnavailableView {
+                                Label(Loc.t("Meetings"), systemImage: "record.circle")
+                            } description: {
+                                Text(Loc.t("Datei auswählen …"))
+                            }
+                        }
                     }
                 }
+                .navigationSplitViewStyle(.balanced)
+            } else {
+                NavigationStack { meetingList }
+            }
+        }
+    }
 
+    private var meetingList: some View {
+        List(selection: usesSplitNavigation ? $queue.selectedJobID : .constant(nil)) {
+            if engine.transcriberReady {
+                recordSection
+                if !queue.jobs.isEmpty { jobsSection }
+                filesSection
+            } else {
                 Section {
-                    Text(Loc.t("Alles läuft auf diesem Gerät — nichts wird hochgeladen. Aufnahmen und fertige Transkripte bleiben liegen, bis du sie hier entfernst."))
-                        .font(.caption).foregroundStyle(.secondary)
+                    Text(Loc.t("Zum Transkribieren wird das Sprachmodell gebraucht. Lade es in den Einstellungen — danach geht es hier weiter."))
+                        .font(.footnote).foregroundStyle(.secondary)
                 }
             }
-            .navigationTitle(Loc.t("Meetings"))
-            .task {
-                // Liegengebliebene Mitschnitte zurückholen. Während einer laufenden
-                // Aufnahme nicht: Die Datei wächst gerade noch.
-                guard !engine.meetingRecorder.isRecording else { return }
-                queue.restore(MeetingRecorder.existingRecordings())
+
+            Section {
+                Text(Loc.t("Alles läuft auf diesem Gerät — nichts wird hochgeladen. Aufnahmen und fertige Transkripte bleiben liegen, bis du sie hier entfernst."))
+                    .font(.caption).foregroundStyle(.secondary)
             }
-            .fileImporter(isPresented: $picking,
-                          allowedContentTypes: [.audio, .movie],
-                          allowsMultipleSelection: true) { result in
-                switch result {
-                case .success(let urls): queue.add(urls, start: false)
-                case .failure(let error): pickerError = error.localizedDescription
-                }
+        }
+        .navigationTitle(Loc.t("Meetings"))
+        .task {
+            // Liegengebliebene Mitschnitte zurückholen. Während einer laufenden
+            // Aufnahme nicht: Die Datei wächst gerade noch.
+            guard !engine.meetingRecorder.isRecording else { return }
+            queue.restore(MeetingRecorder.existingRecordings())
+        }
+        .fileImporter(isPresented: $picking,
+                      allowedContentTypes: [.audio, .movie],
+                      allowsMultipleSelection: true) { result in
+            switch result {
+            case .success(let urls): queue.add(urls, start: false)
+            case .failure(let error): pickerError = error.localizedDescription
             }
-            .fullScreenCover(isPresented: $recording) {
-                MeetingRecordView(recorder: engine.meetingRecorder) { url in
-                    queue.add([url], start: false)
-                }
+        }
+        .fullScreenCover(isPresented: $recording) {
+            MeetingRecordView(recorder: engine.meetingRecorder) { url in
+                queue.add([url], start: false)
             }
-            .sheet(item: $choosing) { job in
-                ProcessingChoiceView(job: job,
-                                     formatterReady: engine.formatterReady,
-                                     onStart: { options in queue.start(job, options: options) },
-                                     onDelete: { queue.remove(job) })
+        }
+        .sheet(item: $choosing) { job in
+            ProcessingChoiceView(job: job,
+                                 formatterReady: engine.formatterReady,
+                                 onStart: { options in queue.start(job, options: options) },
+                                 onDelete: { queue.remove(job) })
+        }
+        // Eigener Schalter statt `renaming != nil`: Sonst räumte der Setter der
+        // Bindung den Auftrag womöglich weg, bevor der Knopf ihn liest.
+        .alert(Loc.t("Wie soll die Aufnahme heißen?"), isPresented: $showRename) {
+            TextField(Loc.t("Name"), text: $newName)
+            Button(Loc.t("Sichern")) {
+                if let job = renaming { queue.rename(job, to: newName) }
+                renaming = nil
             }
-            // Eigener Schalter statt `renaming != nil`: Sonst räumte der Setter der
-            // Bindung den Auftrag womöglich weg, bevor der Knopf ihn liest.
-            .alert(Loc.t("Wie soll die Aufnahme heißen?"), isPresented: $showRename) {
-                TextField(Loc.t("Name"), text: $newName)
-                Button(Loc.t("Sichern")) {
-                    if let job = renaming { queue.rename(job, to: newName) }
-                    renaming = nil
-                }
-                Button(Loc.t("Abbrechen"), role: .cancel) { renaming = nil }
+            Button(Loc.t("Abbrechen"), role: .cancel) { renaming = nil }
+        }
+        .alert(Loc.t("Datei konnte nicht geöffnet werden"),
+               isPresented: .init(get: { pickerError != nil },
+                                  set: { if !$0 { pickerError = nil } })) {
+            Button(Loc.t("OK"), role: .cancel) { pickerError = nil }
+        } message: {
+            Text(pickerError ?? "")
+        }
+        .confirmationDialog(Loc.t("Aufnahme entfernen?"),
+                            isPresented: .init(get: { pendingRemoval != nil },
+                                               set: { if !$0 { pendingRemoval = nil } }),
+                            titleVisibility: .visible) {
+            Button(Loc.t("Entfernen"), role: .destructive) {
+                if let job = pendingRemoval { queue.remove(job) }
+                pendingRemoval = nil
             }
-            .alert(Loc.t("Datei konnte nicht geöffnet werden"),
-                   isPresented: .init(get: { pickerError != nil },
-                                      set: { if !$0 { pickerError = nil } })) {
-                Button(Loc.t("OK"), role: .cancel) { pickerError = nil }
-            } message: {
-                Text(pickerError ?? "")
-            }
-            .confirmationDialog(Loc.t("Aufnahme entfernen?"),
-                                isPresented: .init(get: { pendingRemoval != nil },
-                                                   set: { if !$0 { pendingRemoval = nil } }),
-                                titleVisibility: .visible) {
-                Button(Loc.t("Entfernen"), role: .destructive) {
-                    if let job = pendingRemoval { queue.remove(job) }
-                    pendingRemoval = nil
-                }
-                Button(Loc.t("Abbrechen"), role: .cancel) { pendingRemoval = nil }
-            } message: {
-                if let job = pendingRemoval, MeetingRecorder.isOwnRecording(job.url) {
-                    Text(Loc.t("Die Aufnahme und ihr Transkript werden vom Gerät entfernt. Das lässt sich nicht rückgängig machen."))
-                } else {
-                    Text(Loc.t("Der Auftrag und sein Transkript werden aus shout. entfernt. Die ursprüngliche Datei bleibt erhalten."))
-                }
+            Button(Loc.t("Abbrechen"), role: .cancel) { pendingRemoval = nil }
+        } message: {
+            if let job = pendingRemoval, MeetingRecorder.isOwnRecording(job.url) {
+                Text(Loc.t("Die Aufnahme und ihr Transkript werden vom Gerät entfernt. Das lässt sich nicht rückgängig machen."))
+            } else {
+                Text(Loc.t("Der Auftrag und sein Transkript werden aus shout. entfernt. Die ursprüngliche Datei bleibt erhalten."))
             }
         }
     }
@@ -155,6 +184,7 @@ struct MobileFilesView: View {
             ForEach(queue.jobs) { job in
                 MobileJobRow(job: job, queue: queue,
                              formatterReady: engine.formatterReady,
+                             usesSplitNavigation: usesSplitNavigation,
                              onChoose: { choosing = job })
                     // Statt `.onDelete`: Umbenennen gehört an dieselbe Geste, und
                     // beides zusammen geht nur über `swipeActions`.
@@ -192,12 +222,62 @@ struct MobileFilesView: View {
     }
 }
 
+/// Die Auswahl bleibt auch beim Zusammenklappen der Spalten am Auftrag.
+/// Noch laufende oder unverarbeitete Aufträge sind keine leeren Transkripte.
+private struct MobileMeetingDetail: View {
+    @ObservedObject var job: FileTranscriptionJob
+    @ObservedObject var queue: FileTranscriptionQueue
+    let formatterReady: Bool
+    let onChoose: () -> Void
+
+    var body: some View {
+        Group {
+            switch job.state {
+            case .done, .formatting:
+                MobileTranscriptView(job: job, queue: queue,
+                                     formatterReady: formatterReady, isSplitDetail: true)
+            case .unprocessed:
+                ContentUnavailableView {
+                    Label(job.name, systemImage: "waveform")
+                } description: {
+                    Text(Loc.t("Noch nicht verarbeitet"))
+                } actions: {
+                    Button(Loc.t("Verarbeiten"), action: onChoose)
+                        .buttonStyle(.borderedProminent)
+                }
+            case .queued:
+                ProgressView(Loc.t("Wartet"))
+            case .transcribing(let progress):
+                ProgressView(value: progress) {
+                    Text(Loc.t("Wird transkribiert …"))
+                }
+                .padding()
+            case .separatingSpeakers:
+                ProgressView(Loc.t("Sprecher werden getrennt …"))
+            case .failed(let reason):
+                ContentUnavailableView {
+                    Label(Loc.t("Problem"), systemImage: "exclamationmark.triangle")
+                } description: {
+                    Text(reason)
+                }
+            case .cancelled:
+                ContentUnavailableView {
+                    Label(Loc.t("Abgebrochen"), systemImage: "xmark.circle")
+                }
+            }
+        }
+        .navigationTitle(job.name)
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
 /// Eine Zeile der Auftragsliste. Wartende führen zur Entscheidung, fertige aufs
 /// Ergebnis.
 private struct MobileJobRow: View {
     @ObservedObject var job: FileTranscriptionJob
     @ObservedObject var queue: FileTranscriptionQueue
     let formatterReady: Bool
+    let usesSplitNavigation: Bool
     let onChoose: () -> Void
 
     private var destination: some View {
@@ -225,7 +305,11 @@ private struct MobileJobRow: View {
         // fertig, und wer das Protokoll gerade angestoßen hat, will nicht aus der
         // Ansicht geworfen werden.
         case .done, .formatting:
-            NavigationLink { destination } label: { label }
+            if usesSplitNavigation {
+                NavigationLink(value: job.id) { label }
+            } else {
+                NavigationLink { destination } label: { label }
+            }
         default:
             HStack {
                 label
@@ -402,6 +486,8 @@ private struct MobileTranscriptView: View {
     @ObservedObject var queue: FileTranscriptionQueue
     let formatterReady: Bool
 
+    var isSplitDetail = false
+
     private enum Fassung: Hashable { case protokoll, roh }
     @State private var active: Fassung = .protokoll
 
@@ -458,7 +544,7 @@ private struct MobileTranscriptView: View {
             Button(Loc.t("Löschen"), role: .destructive) {
                 // Erst zurück, dann entfernen: Sonst verschwindet die Zeile unter
                 // der geöffneten Ansicht und die Navigation räumt selbst auf.
-                dismiss()
+                if !isSplitDetail { dismiss() }
                 queue.remove(job)
             }
             Button(Loc.t("Abbrechen"), role: .cancel) {}

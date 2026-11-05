@@ -223,7 +223,10 @@ targets:
         CFBundleDisplayName: "shout."
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
-        NSMicrophoneUsageDescription: "shout. nimmt dein Mikrofon auf, um Sprache in Text umzuwandeln. Standardmäßig geschieht das lokal auf deinem Gerät; nur wenn du selbst einen externen Anbieter einrichtest, wird die Aufnahme dorthin übertragen."
+        NSMicrophoneUsageDescription: "shout. nimmt dein Mikrofon auf, um Sprache in Text umzuwandeln. Standardmäßig geschieht das lokal auf deinem Gerät; nur wenn du selbst einen externen Anbieter einrichtest, wird die Aufnahme dorthin übertragen. Auf deinen Wunsch erkennt SHOUT außerdem Musik über Shazam; dabei wird ein akustischer Fingerabdruck abgeglichen."
+        ShoutTidalClientID: "IgpntErwWjZsRdec"
+        ShoutSpotifyClientID: "25b6785bc1e64f9cb8001a586e7f0b82"
+        NSAppleMusicUsageDescription: "SHOUT sucht auf deinen Wunsch Musik und erstellt nur von dir bestätigte Playlists in deiner Mediathek."
         UILaunchScreen: {}
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
@@ -236,7 +239,7 @@ targets:
           - UIInterfaceOrientationLandscapeRight
         CFBundleURLTypes:
           - CFBundleURLName: com.inthezone.shout
-            CFBundleURLSchemes: [shout]
+            CFBundleURLSchemes: [shout, shout-music]
         # Ohne diesen Modus endet ein Meeting-Mitschnitt, sobald das iPhone
         # gesperrt wird oder die App in den Hintergrund geht.
         UIBackgroundModes:
@@ -340,6 +343,13 @@ targets:
     platform: macOS
     sources:
       - path: Tests/ShoutTests
+      - path: Sources/ShoutMobile/MusicDiscovery/DiscoveryModels.swift
+      - path: Sources/ShoutMobile/MusicDiscovery/DiscoveryServiceCandidate.swift
+      - path: Sources/ShoutMobile/MusicDiscovery/DiscoveryTransport.swift
+      - path: Sources/ShoutMobile/MusicDiscovery/DiscoveryStore.swift
+      - path: Sources/ShoutMobile/MusicDiscovery/DiscoveryWorkflow.swift
+      - path: Sources/ShoutMobile/MusicDiscovery/DiscoverySpotifyAuth.swift
+      - path: Sources/ShoutMobile/MusicDiscovery/DiscoveryTidalAPI.swift
       - path: Sources/FlowLokal/DoubleTapDetector.swift
       - path: Sources/FlowLokal/TranscriptPlausibility.swift
       - path: Sources/FlowLokal/FormattingGuard.swift

@@ -1,6 +1,7 @@
 import SwiftUI
 import UIKit
 import UniformTypeIdentifiers
+import CoreTransferable
 
 /// Einstellungen: Diktat-Optionen, Modelle (mit Geräte-Empfehlung), Daten, Statistiken, Support.
 struct MobileSettingsView: View {
@@ -23,7 +24,6 @@ struct MobileSettingsView: View {
     @State private var importing = false
     @State private var pendingImportURL: URL?
     @State private var confirmImport = false
-    @State private var shareURL: URL?
     @State private var dataMessage: String?
 
     private var ram: Int { Hardware.physicalMemoryGB }
@@ -78,7 +78,6 @@ struct MobileSettingsView: View {
                            engine.dictionary.contents.terms.count + engine.dictionary.contents.corrections.count,
                            engine.history.entries.count))
             }
-            .sheet(item: $shareURL) { url in ShareSheet(items: [url]) }
         }
     }
 
@@ -333,9 +332,8 @@ struct MobileSettingsView: View {
 
     private var dataSection: some View {
         Section {
-            Button {
-                shareURL = engine.exportBundleURL()
-            } label: {
+            ShareLink(item: BackupTransfer(engine: engine),
+                      preview: SharePreview("shout-backup.json")) {
                 Label(Loc.t("Backup exportieren (teilen)"), systemImage: "square.and.arrow.up")
             }
             Button {
@@ -344,9 +342,7 @@ struct MobileSettingsView: View {
                 Label(Loc.t("Backup importieren"), systemImage: "square.and.arrow.down")
             }
             if let safetyBackup = engine.latestSafetyBackupURL() {
-                Button {
-                    shareURL = safetyBackup
-                } label: {
+                ShareLink(item: safetyBackup) {
                     Label(Loc.t("Letzte Sicherheitskopie teilen"), systemImage: "clock.arrow.circlepath")
                 }
             }
@@ -388,16 +384,17 @@ struct MobileSettingsView: View {
     }
 }
 
-/// Erlaubt `.sheet(item:)` mit einer URL.
-extension URL: @retroactive Identifiable {
-    public var id: String { absoluteString }
-}
+/// Erst beim Teilen einen aktuellen Stand schreiben. ShareLink übernimmt die
+/// systemgerechte Präsentation auf iPhone und iPad ohne eigenen UIKit-Wrapper.
+private struct BackupTransfer: Transferable {
+    let engine: MobileEngine
 
-/// Dünner Wrapper um das System-Teilen-Blatt (UIActivityViewController).
-struct ShareSheet: UIViewControllerRepresentable {
-    let items: [Any]
-    func makeUIViewController(context: Context) -> UIActivityViewController {
-        UIActivityViewController(activityItems: items, applicationActivities: nil)
+    static var transferRepresentation: some TransferRepresentation {
+        FileRepresentation(exportedContentType: .json) { backup in
+            guard let url = await backup.engine.exportBundleURL() else {
+                throw CocoaError(.fileWriteUnknown)
+            }
+            return SentTransferredFile(url)
+        }
     }
-    func updateUIViewController(_ controller: UIActivityViewController, context: Context) {}
 }

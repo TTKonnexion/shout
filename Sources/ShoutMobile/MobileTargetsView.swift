@@ -8,24 +8,32 @@ import UIKit
 struct TargetChooser: View {
     @ObservedObject var targets: TargetDispatcher
     @Environment(\.openURL) private var openURL
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    private var targetLayout: AnyLayout {
+        dynamicTypeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(spacing: 8))
+            : AnyLayout(HStackLayout(spacing: 8))
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(Loc.t("Wohin damit?"))
                 .font(.caption).foregroundStyle(.secondary)
-            HStack(spacing: 8) {
+            targetLayout {
                 ForEach(DictationTarget.primary, id: \.self) { ziel in
                     choiceButton(ziel)
                 }
             }
             // Direkt in die App des Assistenten — über das dortige Abo,
             // ohne Dienst auf dem iMac.
-            HStack(spacing: 8) {
+            targetLayout {
                 ForEach(AssistantApp.allCases, id: \.self) { app in
                     Button { open(app) } label: {
                         Label(app.title, systemImage: "arrow.up.forward.app")
                             .font(.footnote.weight(.semibold))
-                            .lineLimit(1).minimumScaleFactor(0.8)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
                             .frame(maxWidth: .infinity, minHeight: 44)
                     }
                     .buttonStyle(.bordered)
@@ -33,7 +41,7 @@ struct TargetChooser: View {
             }
             // Am iMac öffnen: Der Dienst dort startet Claude bzw. ChatGPT mit
             // dem Diktat — praktisch, wenn man gleich am Schreibtisch weitermacht.
-            HStack(spacing: 8) {
+            targetLayout {
                 ForEach(DictationTarget.imac, id: \.self) { ziel in
                     choiceButton(ziel)
                 }
@@ -58,7 +66,8 @@ struct TargetChooser: View {
                 Image(systemName: TargetText.icon(ziel))
                 Text(TargetText.label(ziel))
                     .font(.footnote.weight(.semibold))
-                    .lineLimit(1).minimumScaleFactor(0.8)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             .frame(maxWidth: .infinity, minHeight: 52)
         }

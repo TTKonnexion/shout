@@ -27,34 +27,40 @@ struct MeetingRecordView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 32) {
-                Spacer()
+            GeometryReader { geometry in
+                ScrollView {
+                    VStack(spacing: 32) {
+                        Spacer()
 
-                Text(Self.clock(recorder.duration))
-                    .font(.system(size: min(clockSize, 76), weight: .light, design: .rounded))
-                    .monospacedDigit()
-                    .foregroundStyle(recorder.isPaused ? .secondary : .primary)
-                    .contentTransition(reduceMotion ? .identity : .numericText())
+                        Text(Self.clock(recorder.duration))
+                            .font(.system(size: min(clockSize, 76), weight: .light, design: .rounded))
+                            .monospacedDigit()
+                            .foregroundStyle(recorder.isPaused ? .secondary : .primary)
+                            .contentTransition(reduceMotion ? .identity : .numericText())
 
-                Text(status)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                        Text(status)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
 
-                level
+                        level
 
-                Spacer()
+                        Spacer()
 
-                if let error {
-                    Text(error)
-                        .font(.footnote).foregroundStyle(.red)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 24)
+                        if let error {
+                            Text(error)
+                                .font(.footnote).foregroundStyle(.red)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 24)
+                        }
+
+                        controls
+                            .padding(.bottom, 24)
+                    }
+                    .frame(maxWidth: 640, minHeight: max(0, geometry.size.height))
+                    .frame(maxWidth: .infinity)
                 }
-
-                controls
-                    .padding(.bottom, 24)
+                .scrollBounceBehavior(.basedOnSize)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .navigationTitle(Loc.t("Meeting aufnehmen"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
