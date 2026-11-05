@@ -350,6 +350,8 @@ targets:
       - path: Sources/ShoutMobile/MusicDiscovery/DiscoveryWorkflow.swift
       - path: Sources/ShoutMobile/MusicDiscovery/DiscoverySpotifyAuth.swift
       - path: Sources/ShoutMobile/MusicDiscovery/DiscoveryTidalAPI.swift
+      # Auftrag Nr. 268: Termin-Erkennung, Mail-/WhatsApp-Adressen (reine Logik, ohne Oberfläche)
+      - path: Sources/ShoutMobile/Aufgaben/TaskHandoff.swift
       - path: Sources/FlowLokal/DoubleTapDetector.swift
       - path: Sources/FlowLokal/TranscriptPlausibility.swift
       - path: Sources/FlowLokal/FormattingGuard.swift
