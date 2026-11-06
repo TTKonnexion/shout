@@ -25,6 +25,18 @@ schemes:
       config: Debug
     archive:
       config: Release
+  ShoutMe:
+    build:
+      # Implizite Abhängigkeiten MÜSSEN an sein, sonst baut Xcode das MLX-
+      # Makro-Target (MLXHuggingFaceMacros) ohne swift-syntax → Build bricht ab.
+      buildImplicitDependencies: true
+      parallelizeBuild: true
+      targets:
+        ShoutMe: all
+    run:
+      config: Debug
+    archive:
+      config: Release
   ShoutTests:
     build:
       targets:
@@ -145,7 +157,7 @@ targets:
 
   # iOS-App: gleiche lokale Pipeline (WhisperKit + MLX in-process), mobile UI.
   # Teilt die Kern-Dateien aus Sources/FlowLokal (plattformneutral gehalten).
-  ShoutMobile:
+  ShoutMobile: &shoutmobile
     type: application
     platform: iOS
     deploymentTarget: "17.0"
@@ -227,6 +239,7 @@ targets:
         ShoutTidalClientID: "IgpntErwWjZsRdec"
         ShoutSpotifyClientID: "25b6785bc1e64f9cb8001a586e7f0b82"
         NSAppleMusicUsageDescription: "SHOUT sucht auf deinen Wunsch Musik und erstellt nur von dir bestätigte Playlists in deiner Mediathek."
+        NSCalendarsWriteOnlyAccessUsageDescription: "shout. trägt einen Termin in deinen Kalender ein, nur wenn du es bestätigst. Bestehende Termine werden nicht gelesen."
         UILaunchScreen: {}
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
@@ -283,6 +296,64 @@ targets:
       # Tastatur-Erweiterung in die App einbetten.
       - target: ShoutKeyboard
         embed: true
+
+  # Kunden-Version „shoutme“ (Auftrag Nr. 268): eigene App mit eigener Kennung, gleicher Code,
+  # Build-Schalter SHOUTME blendet die Ziele zu Thomas' Rechnern, Spotify/TIDAL und die
+  # Tastatur aus. Mit Diktat, Termin/E-Mail/WhatsApp und Shazam.
+  ShoutMe:
+    <<: *shoutmobile
+    info:
+      path: Support/Info-ShoutMe.plist
+      properties:
+        CFBundleDisplayName: "shoutme"
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        NSMicrophoneUsageDescription: "shoutme nimmt dein Mikrofon auf, um deine Sprache in Text umzuwandeln und Musik zu erkennen. Die Sprache wird auf deinem Gerät verarbeitet; für die Musikerkennung wird ein akustischer Fingerabdruck mit Shazam abgeglichen."
+        NSCalendarsWriteOnlyAccessUsageDescription: "shoutme trägt einen Termin in deinen Kalender ein, nur wenn du es bestätigst. Bestehende Termine werden nicht gelesen."
+        NSAppleMusicUsageDescription: "shoutme speichert erkannte Songs nur auf deinen Wunsch."
+        UILaunchScreen: {}
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        CFBundleURLTypes:
+          - CFBundleURLName: de.thull24.shoutme
+            CFBundleURLSchemes: [shoutme]
+        UIBackgroundModes:
+          - audio
+    settings:
+      base:
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        PRODUCT_BUNDLE_IDENTIFIER: de.thull24.shoutme
+        PRODUCT_NAME: "shoutme"
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        CODE_SIGN_ENTITLEMENTS: Release/shoutme.entitlements
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: 2YGD9XP29T
+        SWIFT_VERSION: "5.10"
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: "$(inherited) SHOUTME"
+    dependencies:
+      - package: argmax
+        product: WhisperKit
+      - package: argmax
+        product: SpeakerKit
+      - package: mlxlm
+        product: MLXLLM
+      - package: mlxlm
+        product: MLXLMCommon
+      - package: mlxlm
+        product: MLXHuggingFace
+      - package: transformers
+        product: Tokenizers
+      - package: huggingface
+        product: HuggingFace
+      - package: mlxcore
+        product: MLX
 
   # Tastatur-Erweiterung: Diktier-Tastatur für beliebige Apps. Bewusst schlank
   # (KEINE Modelle/MLX — Tastaturen haben ein enges Speicherlimit): öffnet zum

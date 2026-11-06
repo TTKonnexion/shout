@@ -89,15 +89,19 @@ struct MusicDiscoveryView: View {
                                 }
                             }
                         }
+                        #if !SHOUTME
                         Button { exportView = true } label: {
                             Label("Als Playlist übertragen", systemImage: "music.note.list")
                         }
                         .disabled(recognition.listening)
+                        #endif
                     }
                 }
+                #if !SHOUTME
                 Section {
                     Button("Musikdienste verbinden") { recognition.cancel(); settings = true }
                 }
+                #endif
             }
             .navigationTitle("Musik erkennen")
             .navigationBarTitleDisplayMode(.inline)

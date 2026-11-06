@@ -55,6 +55,7 @@ struct HomeView: View {
                     .accessibilityLabel("Musik erkennen und Listen öffnen")
                 }
                 ToolbarItem(placement: .principal) { BrandTitle() }
+                #if !SHOUTME
                 if targetsEnabled {
                     ToolbarItem(placement: .topBarTrailing) {
                         NavigationLink { TargetHistoryView(targets: targets) } label: {
@@ -63,6 +64,7 @@ struct HomeView: View {
                         .accessibilityLabel(Loc.t("Verlauf der Ziele"))
                     }
                 }
+                #endif
             }
         }
     }
@@ -118,10 +120,13 @@ struct HomeView: View {
                 TargetPendingBanner(targets: targets)
             }
             if let result = engine.lastResult, engine.state != .recording {
+                #if !SHOUTME
                 if targets.offeredText != nil {
                     TargetChooser(targets: targets)
                 }
+                #endif
                 resultCard(result, maxHeight: maxHeight)
+                AufgabenChooser(text: result)
             }
             if engine.state != .recording, let item = targets.activeItem {
                 TargetItemCard(targets: targets, item: item)
