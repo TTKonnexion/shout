@@ -305,12 +305,12 @@ targets:
     info:
       path: Support/Info-ShoutMe.plist
       properties:
-        CFBundleDisplayName: "shoutme"
+        CFBundleDisplayName: "tellme"
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
-        NSMicrophoneUsageDescription: "shoutme nimmt dein Mikrofon auf, um deine Sprache in Text umzuwandeln und Musik zu erkennen. Die Sprache wird auf deinem Gerät verarbeitet; für die Musikerkennung wird ein akustischer Fingerabdruck mit Shazam abgeglichen."
-        NSCalendarsWriteOnlyAccessUsageDescription: "shoutme trägt einen Termin in deinen Kalender ein, nur wenn du es bestätigst. Bestehende Termine werden nicht gelesen."
-        NSAppleMusicUsageDescription: "shoutme speichert erkannte Songs nur auf deinen Wunsch."
+        NSMicrophoneUsageDescription: "tellme nimmt dein Mikrofon auf, um deine Sprache in Text umzuwandeln und Musik zu erkennen. Die Sprache wird auf deinem Gerät verarbeitet; für die Musikerkennung wird ein akustischer Fingerabdruck mit Shazam abgeglichen."
+        NSCalendarsWriteOnlyAccessUsageDescription: "tellme trägt einen Termin in deinen Kalender ein, nur wenn du es bestätigst. Bestehende Termine werden nicht gelesen."
+        NSAppleMusicUsageDescription: "tellme speichert erkannte Songs nur auf deinen Wunsch."
         UILaunchScreen: {}
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
@@ -328,7 +328,7 @@ targets:
       base:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         PRODUCT_BUNDLE_IDENTIFIER: de.thull24.shoutme
-        PRODUCT_NAME: "shoutme"
+        PRODUCT_NAME: "tellme"
         MARKETING_VERSION: "0.1.0"
         CURRENT_PROJECT_VERSION: "1"
         TARGETED_DEVICE_FAMILY: "1,2"

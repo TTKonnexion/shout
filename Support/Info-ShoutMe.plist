@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>shoutme</string>
+	<string>tellme</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -32,11 +32,11 @@
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>NSAppleMusicUsageDescription</key>
-	<string>shoutme speichert erkannte Songs nur auf deinen Wunsch.</string>
+	<string>tellme speichert erkannte Songs nur auf deinen Wunsch.</string>
 	<key>NSCalendarsWriteOnlyAccessUsageDescription</key>
-	<string>shoutme trägt einen Termin in deinen Kalender ein, nur wenn du es bestätigst. Bestehende Termine werden nicht gelesen.</string>
+	<string>tellme trägt einen Termin in deinen Kalender ein, nur wenn du es bestätigst. Bestehende Termine werden nicht gelesen.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>shoutme nimmt dein Mikrofon auf, um deine Sprache in Text umzuwandeln und Musik zu erkennen. Die Sprache wird auf deinem Gerät verarbeitet; für die Musikerkennung wird ein akustischer Fingerabdruck mit Shazam abgeglichen.</string>
+	<string>tellme nimmt dein Mikrofon auf, um deine Sprache in Text umzuwandeln und Musik zu erkennen. Die Sprache wird auf deinem Gerät verarbeitet; für die Musikerkennung wird ein akustischer Fingerabdruck mit Shazam abgeglichen.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
