@@ -149,8 +149,13 @@ struct HomeView: View {
                     } else {
                         ProgressView { Text(Loc.t("Sprachmodell wird geladen …")).font(.footnote) }
                     }
+                    #if SHOUTME
+                    Text("Beim ersten Start lädt shoutme einmalig das Sprachmodell (rund 600 MB). Bitte im WLAN bleiben und die App offen lassen. Danach läuft das Diktieren ohne Internet.")
+                        .font(.caption2).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                    #else
                     Text(Loc.t("Einmalig — danach läuft alles offline."))
                         .font(.caption2).foregroundStyle(.secondary)
+                    #endif
                 }
                 .padding(.horizontal, 32)
             case .idle:
